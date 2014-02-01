@@ -12,6 +12,7 @@
   "maxdepth": 4,
   "maxlen": 100,
   "node": true,
+  "browser": true,
   "globals": {
     "describe": false,
     "it": false
