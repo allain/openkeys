@@ -1,0 +1,19 @@
+{
+  "trailing": true,
+  "unused": true,
+  "laxcomma": true,
+  "eqeqeq" : true,
+  "indent": 2,
+  "latedef": "nofunc",
+  "noarg": true,
+  "noempty": true,
+  "quotmark": "double",
+  "undef": true,
+  "maxdepth": 4,
+  "maxlen": 100,
+  "node": true,
+  "globals": {
+    "describe": false,
+    "it": false
+  }
+}
