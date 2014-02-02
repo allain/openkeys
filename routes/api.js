@@ -1,6 +1,15 @@
 var _ = require("lodash"),
   async = require("async");
 
+function index(req, res) {
+  var key = req.params.key;
+  req.store.index(key, function(err, index) {
+    if (err) res.send(500, err);
+
+    res.json(200, index);
+  });
+}
+
 function get(req, res) {
   var format = req.params.format || "txt";
 
@@ -21,8 +30,6 @@ function get(req, res) {
 
       req.store.get(key, function(err, value) {
         if (err) return cb(err);
-
-        console.log(value);
 
         mappings[key] = value ? JSON.parse(value) : null;
         cb();
@@ -126,6 +133,7 @@ function del(req, res) {
 }
 
 module.exports = {
+  index: index,
   get: get,
   put: put,
   del: del,

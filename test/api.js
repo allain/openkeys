@@ -2,6 +2,30 @@ var assert = require("chai").assert,
     api = require("../routes/api");
 
 describe("api", function() {
+  describe("index", function() {
+    api.index({
+      store: {
+        index: function(keyPrefix, callback) {
+          callback(null, {
+            "a/1": 1,
+            "a/2": 2
+          });
+        }
+      },
+      params: {
+        key: "a"
+      }
+    }, {
+      json: function(status, json) {
+        assert.equal(status, 200);
+        assert.deepEqual(json, {
+          "a/1": 1,
+          "a/2": 2
+        });
+      }
+    });
+  });
+
   describe("get", function() {
     it("getting missing key yields 404", function(done) {
       api.get({
@@ -55,6 +79,9 @@ describe("api", function() {
           key: "found"
         }
       }, {
+        set: function() {
+
+        },
         send: function(status, content) {
           assert.equal(status, 200);
           assert.equal(content, "Found Content");
@@ -75,6 +102,9 @@ describe("api", function() {
           format: "txt"
         }
       }, {
+        set: function() {
+
+        },
         send: function(status, content) {
           assert.equal(status, 200);
           assert.equal(content, "Found Content");
@@ -133,6 +163,9 @@ describe("api", function() {
   describe("put", function() {
     it("it returns ok when valid put", function(done) {
       api.put({
+        is: function() {
+          return false;
+        },
         store: {
           put: function(key, value, callback) {
             assert.equal(key, "a");
@@ -145,6 +178,7 @@ describe("api", function() {
         },
         body: "content"
       }, {
+
         send: function(status, message) {
           assert.equal(status, 200);
           assert.equal(message, "ok");
