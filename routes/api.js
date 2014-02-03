@@ -31,7 +31,7 @@ function get(req, res) {
       req.store.get(key, function(err, value) {
         if (err) return cb(err);
 
-        mappings[key] = value ? JSON.parse(value) : null;
+        mappings[key] = value || null;
         cb();
       });
     }, function(err) {
@@ -97,19 +97,15 @@ function put(req, res) {
     return res.send(400, "invalid key");
   }
 
-  var value = req.body;
+  var value = req.rawBody;
 
   if (value !== "" && value !== undefined) {
-    var encodedValue = value;
-    if (req.is("application/json")) {
-      encodedValue = JSON.stringify(value);
-    }
-
-    req.store.put(key, encodedValue, function(err) {
+    req.store.put(key, value, function(err) {
       if (err) {
         return res.send(500, "error saving item");
       }
 
+      res.set("Content-Type", "text/plain");
       res.send(200, "ok");
     });
   } else {
@@ -127,6 +123,7 @@ function del(req, res) {
     req.store.del(key, function(err) {
       if (err) return res.send(500, "error deleting item");
 
+      res.set("Content-Type", "text/plain");
       res.send(200, "ok");
     });
   });

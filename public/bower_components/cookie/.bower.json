@@ -1,0 +1,14 @@
+{
+  "name": "cookie",
+  "homepage": "https://github.com/js-coder/cookie.js",
+  "_release": "d2906194f6",
+  "_resolution": {
+    "type": "branch",
+    "branch": "gh-pages",
+    "commit": "d2906194f6b33063b8c2fd6718178afb33585ead"
+  },
+  "_source": "git://github.com/js-coder/cookie.js.git",
+  "_target": "gh-pages",
+  "_originalSource": "cookie",
+  "_direct": true
+}

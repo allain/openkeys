@@ -1,4 +1,8 @@
 var express = require("express");
+var async = require("async");
+var assert = require("assert");
+var fs = require("fs");
+var jsmin = require("jsmin").jsmin;
 
 var port = (process.env.VMC_APP_PORT || 2020);
 var host = (process.env.VCAP_APP_HOST || "localhost");
@@ -10,9 +14,8 @@ var api = require("./routes/api");
 
 app.configure(function() {
   app.use(express.methodOverride());
-  app.use(express.bodyParser({strict: false}));
   app.use(express.logger());
-  app.use(express.static(__dirname + "/public"));
+  //app.use(express.static(__dirname + "/public"));
 
   var mongo;
   if (process.env.VCAP_SERVICES){
@@ -45,11 +48,24 @@ app.configure(function() {
 
   // Install store as part of the request object
   app.use(function(req, res, next) {
-    console.log(mongoUrl);
-
     req.store = store;
     next();
   });
+
+  // Make rawBody be the raw body when PUT is used and text/plain is the payload
+  app.use(function(req, res, next){
+    if (req.method === "PUT") {
+      var data = [];
+
+      req.on('data', function(chunk){ data.push(chunk); })
+      req.on('end', function(){
+        req.rawBody = data.join("");
+        next();
+      });
+    } else {
+      next();
+    }
+})
 
   // Support cross domain queries
   app.use(function(req, res, next) {
@@ -66,6 +82,46 @@ app.configure("development", function () {
 
 app.configure("production", function () {
   app.use(express.errorHandler());
+});
+
+app.get("/openkeys.js", function(req, res) {
+  async.map([
+    "/public/bower_components/q/q.js",
+    "/public/bower_components/qajax/src/qajax.js",
+    "/public/bower_components/js-md5/js/md5.js",
+    "/public/bower_components/store-js/store.js",
+    "/public/bower_components/js-signals/dist/signals.js",
+    "/public/openkeys.js"
+  ], function(path, cb) {
+    fs.readFile(__dirname + path, "utf-8", cb);
+  }, function(err, parts) {
+    assert(!err);
+
+    res.set("Content-Type", "text/javascript");
+    res.send(parts.join("\n"));
+  })
+});
+
+app.get("/openkeys.min.js", function(req, res) {
+  async.map([
+    "/public/bower_components/q/q.js",
+    "/public/bower_components/qajax/src/qajax.js",
+    "/public/bower_components/js-md5/js/md5.js",
+    "/public/bower_components/store-js/store.js",
+    "/public/bower_components/js-signals/dist/signals.js",
+    "/public/openkeys.js"
+  ], function(path, cb) {
+    fs.readFile(__dirname + path, "utf-8", function(err, content) {
+      if (err) return cb(err);
+
+      cb(null, jsmin(content));
+    });
+  }, function(err, parts) {
+    assert(!err);
+
+    res.set("Content-Type", "text/javascript");
+    res.send(parts.join("\n"));
+  })
 });
 
 app.get("/:key([a-z0-9A-Z\/]+)", api.get);
