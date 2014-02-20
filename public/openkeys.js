@@ -56,8 +56,10 @@ window.openkeys = (function() {
       }
 
       if (authKey) {
-        get(authKey + "/email").then(function(accountEmail) {
-          if (email && email !== accountEmail) {
+        get(authKey + "/profile").then(function(profile) {
+          profile = profile ? JSON.parse(profile) : null;
+
+          if (!profile || (email !== undefined && profile.email !== email)) {
             defered.reject("invalid credentials");
           } else {
             store.set("authKey", authKey);
@@ -78,11 +80,13 @@ window.openkeys = (function() {
       var authKey = md5(appName + email + password);
 
       get(md5(appName + email)).then(function(foundEmail) {
-        if (foundEmail) {
+        if (false && foundEmail) {
           defered.reject("account already exists");
         } else {
           return put(md5(appName + email), email).then(function() {
-            return put(authKey + "/email", email);
+            return put(authKey + "/profile", {
+              email: email
+            });
           }).then(function() {
               defered.resolve(buildUserDb(authKey));
           }, defered.reject);
@@ -254,18 +258,19 @@ window.openkeys = (function() {
           return put(authKey + "/" + key, value).then(function() {
             store.set(key, value);
             if (newKey) {
-              userDb.inserted.dispatch(value);
+              userDb.inserted.dispatch(value, key);
             } else {
-              userDb.updated.dispatch(value);
+              userDb.updated.dispatch(value, key);
             }
           });
         },
 
         remove: function(key) {
-          return remove(authKey + "/" + key, value).then(function() {
+          return remove(authKey + "/" + key).then(function() {
             var localIndex = store.get("index");
             delete localIndex[key];
-            store.put("index", localIndex);
+            store.remove(key);
+            store.set("index", localIndex);
 
             userDb.deleted.dispatch(key);
           });
@@ -281,6 +286,8 @@ window.openkeys = (function() {
             userDb.deleted.removeAll();
             authKey = null;
             defered.resolve();
+
+            clearInterval(userDb.syncInterval);
           } else {
             defered.reject("no session");
           }
@@ -326,7 +333,7 @@ window.openkeys = (function() {
         userDb.sync();
       }, 0);
 
-      setInterval(function() {
+      userDb.syncInterval = setInterval(function() {
         userDb.sync();
       }, 10000);
 
