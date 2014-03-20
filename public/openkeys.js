@@ -42,7 +42,10 @@ window.openkeys = (function() {
         url: endpointUrl + "/" + key,
         method: "DELETE",
       })
-      .then(Qajax.filterSuccess);
+      .then(Qajax.filterStatus(function (code) {
+        // Treat a missing record as a successful deletion
+        return code === 200 || code === 404;
+      }));
     }
 
     function user(email, password) {
