@@ -1,4 +1,10 @@
 window.openkeys = (function() {
+  var log = function(msg) {
+    if (window.console && window.console.log) {
+      console.log(msg);
+    }
+  };
+
   var logError = function(msg) {
     if (window.console && window.console.error) {
       console.error(msg);
@@ -11,7 +17,7 @@ window.openkeys = (function() {
     function get(key) {
       var defered = Q.defer();
 
-      Qajax(endpointUrl + "/" + key)
+      Qajax(endpointUrl + "/" + key + "?" + Date.now())
         .then(Qajax.filterSuccess)
         .get('responseText')
         .then(defered.resolve, function(xhr) {
@@ -233,6 +239,7 @@ window.openkeys = (function() {
             }
           });
         },
+
         get: function(key) {
           if (!authKey) return Q.reject("no session");
 
@@ -247,7 +254,7 @@ window.openkeys = (function() {
               return value;
             });
           } else {
-            return Q.resolve(value);
+            return Q.resolve(localValue);
           }
         },
 
@@ -332,9 +339,7 @@ window.openkeys = (function() {
         }
       };
 
-      setTimeout(function() {
-        userDb.sync();
-      }, 0);
+      setTimeout(function() { userDb.sync(); }, 0);
 
       userDb.syncInterval = setInterval(function() {
         userDb.sync();
